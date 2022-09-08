@@ -1,103 +1,131 @@
+/*
+ * Rui Santos 
+ * Complete Project Details https://randomnerdtutorials.com
+ *
+ * Based on the example TinyGPS++ from arduiniana.org
+ *
+ */
+ 
 #include <TinyGPS++.h>
 #include <SoftwareSerial.h>
-/* Create object named bt of the class SoftwareSerial */
-SoftwareSerial GPS_SoftSerial(4, 3);/* (Rx, Tx) */
-/* Create an object named gps of the class TinyGPSPlus */
-TinyGPSPlus gps;      
 
-volatile float minutes, seconds;
-volatile int degree, secs, mins;
+static const int RXPin = 4, TXPin = 3;
+static const uint32_t GPSBaud = 9600;
 
-void setup() {
-  Serial.begin(9600); /* Define baud rate for serial communication */
-  GPS_SoftSerial.begin(9600); /* Define baud rate for software serial communication */
+// The TinyGPS++ object
+TinyGPSPlus gps;
+
+// The serial connection to the GPS device
+SoftwareSerial ss(RXPin, TXPin);
+
+void setup(){
+  Serial.begin(9600);
+  ss.begin(GPSBaud);
 }
 
-void loop() {
-        smartDelay(1000); /* Generate precise delay of 1ms */
-        unsigned long start;
-        double lat_val, lng_val, alt_m_val;
-        uint8_t hr_val, min_val, sec_val;
-        bool loc_valid, alt_valid, time_valid;
-        lat_val = gps.location.lat(); /* Get latitude data */
-        loc_valid = gps.location.isValid(); /* Check if valid location data is available */
-        lng_val = gps.location.lng(); /* Get longtitude data */
-        alt_m_val = gps.altitude.meters();  /* Get altitude data in meters */
-        alt_valid = gps.altitude.isValid(); /* Check if valid altitude data is available */
-        hr_val = gps.time.hour(); /* Get hour */
-        min_val = gps.time.minute();  /* Get minutes */
-        sec_val = gps.time.second();  /* Get seconds */
-        time_valid = gps.time.isValid();  /* Check if valid time data is available */
-        if (!loc_valid)
-        {          
-          Serial.print("Latitude : ");
-          Serial.println("*****");
-          Serial.print("Longitude : ");
-          Serial.println("*****");
-        }
-        else
-        {
-          DegMinSec(lat_val);
-          Serial.print("Latitude in Decimal Degrees : ");
-          Serial.println(lat_val, 6);
-          Serial.print("Latitude in Degrees Minutes Seconds : ");
-          Serial.print(degree);
-          Serial.print("\t");
-          Serial.print(mins);
-          Serial.print("\t");
-          Serial.println(secs);
-          DegMinSec(lng_val); /* Convert the decimal degree value into degrees minutes seconds form */
-          Serial.print("Longitude in Decimal Degrees : ");
-          Serial.println(lng_val, 6);
-          Serial.print("Longitude in Degrees Minutes Seconds : ");
-          Serial.print(degree);
-          Serial.print("\t");
-          Serial.print(mins);
-          Serial.print("\t");
-          Serial.println(secs);
-        }
-        if (!alt_valid)
-        {
-          Serial.print("Altitude : ");
-          Serial.println("*****");
-        }
-        else
-        {
-          Serial.print("Altitude : ");
-          Serial.println(alt_m_val, 6);    
-        }
-        if (!time_valid)
-        {
-          Serial.print("Time : ");
-          Serial.println("*****");
-        }
-        else
-        {
-          char time_string[32];
-          sprintf(time_string, "Time : %02d/%02d/%02d \n", hr_val, min_val, sec_val);
-          Serial.print(time_string);    
-        }
-}
+void loop(){
+  // This sketch displays information every time a new sentence is correctly encoded.
+  while (ss.available() > 0){
+    gps.encode(ss.read());
+    if (gps.location.isUpdated()){
+      // Latitude in degrees (double)
+      Serial.print("Latitude= "); 
+      Serial.print(gps.location.lat(), 6);      
+      // Longitude in degrees (double)
+      Serial.print(" Longitude= "); 
+      Serial.println(gps.location.lng(), 6); 
+       
+      // Raw latitude in whole degrees
+      Serial.print("Raw latitude = "); 
+      Serial.print(gps.location.rawLat().negative ? "-" : "+");
+      Serial.println(gps.location.rawLat().deg); 
+      // ... and billionths (u16/u32)
+      Serial.println(gps.location.rawLat().billionths);
+      
+      // Raw longitude in whole degrees
+      Serial.print("Raw longitude = "); 
+      Serial.print(gps.location.rawLng().negative ? "-" : "+");
+      Serial.println(gps.location.rawLng().deg); 
+      // ... and billionths (u16/u32)
+      Serial.println(gps.location.rawLng().billionths);
 
-static void smartDelay(unsigned long ms)
-{
-  unsigned long start = millis();
-  do 
-  {
-    while (GPS_SoftSerial.available())  /* Encode data read from GPS while data is available on serial port */
-      gps.encode(GPS_SoftSerial.read());
-/* Encode basically is used to parse the string received by the GPS and to store it in a buffer so that information can be extracted from it */
-  } while (millis() - start < ms);
-}
+      // Raw date in DDMMYY format (u32)
+      Serial.print("Raw date DDMMYY = ");
+      Serial.println(gps.date.value()); 
 
-void DegMinSec( double tot_val)   /* Convert data in decimal degrees into degrees minutes seconds form */
-{  
-  degree = (int)tot_val;
-  minutes = tot_val - degree;
-  seconds = 60 * minutes;
-  minutes = (int)seconds;
-  mins = (int)minutes;
-  seconds = seconds - minutes;
-  seconds = 60 * seconds;
-  secs = (int)seconds;
+      // Year (2000+) (u16)
+      Serial.print("Year = "); 
+      Serial.println(gps.date.year()); 
+      // Month (1-12) (u8)
+      Serial.print("Month = "); 
+      Serial.println(gps.date.month()); 
+      // Day (1-31) (u8)
+      Serial.print("Day = "); 
+      Serial.println(gps.date.day()); 
+
+      // Raw time in HHMMSSCC format (u32)
+      Serial.print("Raw time in HHMMSSCC = "); 
+      Serial.println(gps.time.value()); 
+
+      // Hour (0-23) (u8)
+      Serial.print("Hour = "); 
+      Serial.println(gps.time.hour()); 
+      // Minute (0-59) (u8)
+      Serial.print("Minute = "); 
+      Serial.println(gps.time.minute()); 
+      // Second (0-59) (u8)
+      Serial.print("Second = "); 
+      Serial.println(gps.time.second()); 
+      // 100ths of a second (0-99) (u8)
+      Serial.print("Centisecond = "); 
+      Serial.println(gps.time.centisecond()); 
+
+      // Raw speed in 100ths of a knot (i32)
+      Serial.print("Raw speed in 100ths/knot = ");
+      Serial.println(gps.speed.value()); 
+      // Speed in knots (double)
+      Serial.print("Speed in knots/h = ");
+      Serial.println(gps.speed.knots()); 
+      // Speed in miles per hour (double)
+      Serial.print("Speed in miles/h = ");
+      Serial.println(gps.speed.mph()); 
+      // Speed in meters per second (double)
+      Serial.print("Speed in m/s = ");
+      Serial.println(gps.speed.mps()); 
+      // Speed in kilometers per hour (double)
+      Serial.print("Speed in km/h = "); 
+      Serial.println(gps.speed.kmph()); 
+
+      // Raw course in 100ths of a degree (i32)
+      Serial.print("Raw course in degrees = "); 
+      Serial.println(gps.course.value()); 
+      // Course in degrees (double)
+      Serial.print("Course in degrees = "); 
+      Serial.println(gps.course.deg()); 
+
+      // Raw altitude in centimeters (i32)
+      Serial.print("Raw altitude in centimeters = "); 
+      Serial.println(gps.altitude.value()); 
+      // Altitude in meters (double)
+      Serial.print("Altitude in meters = "); 
+      Serial.println(gps.altitude.meters()); 
+      // Altitude in miles (double)
+      Serial.print("Altitude in miles = "); 
+      Serial.println(gps.altitude.miles()); 
+      // Altitude in kilometers (double)
+      Serial.print("Altitude in kilometers = "); 
+      Serial.println(gps.altitude.kilometers()); 
+      // Altitude in feet (double)
+      Serial.print("Altitude in feet = "); 
+      Serial.println(gps.altitude.feet()); 
+
+      // Number of satellites in use (u32)
+      Serial.print("Number os satellites in use = "); 
+      Serial.println(gps.satellites.value()); 
+
+      // Horizontal Dim. of Precision (100ths-i32)
+      Serial.print("HDOP = "); 
+      Serial.println(gps.hdop.value()); 
+    }
+  }
 }
