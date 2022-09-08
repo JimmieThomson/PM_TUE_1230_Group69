@@ -1,8 +1,3 @@
-/*
- * Rui Santos 
- * Complete Project Details https://randomnerdtutorials.com
- */
- 
 #include <TinyGPS++.h>
 #include <SoftwareSerial.h>
 
@@ -31,4 +26,5 @@ void loop(){
       Serial.println(gps.location.lng(), 6);
     }
   }
+  Serial.println("Control");
 }
