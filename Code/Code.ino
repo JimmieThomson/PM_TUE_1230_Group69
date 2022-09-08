@@ -1,11 +1,11 @@
 #include <TinyGPS++.h>
 #include <SoftwareSerial.h>
+// The TinyGPS++ object
+TinyGPSPlus gps;
 
 static const int RXPin = 4, TXPin = 3;
 static const uint32_t GPSBaud = 9600;
 
-// The TinyGPS++ object
-TinyGPSPlus gps;
 
 // The serial connection to the GPS device
 SoftwareSerial ss(RXPin, TXPin);
