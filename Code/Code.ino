@@ -25,6 +25,7 @@ void setup(){
 
 void loop(){
   // This sketch displays information every time a new sentence is correctly encoded.
+  Serial.println("Amongus");
   while (ss.available() > 0){
     gps.encode(ss.read());
     if (gps.location.isUpdated()){
@@ -40,5 +41,4 @@ void loop(){
       Serial.println(gps.speed.kmph()); 
     }
   }
-  Serial.println("Amongus");
 }
