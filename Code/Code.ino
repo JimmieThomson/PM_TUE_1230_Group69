@@ -21,7 +21,6 @@ SoftwareSerial ss(RXPin, TXPin);
 void setup(){
   Serial.begin(9600);
   ss.begin(GPSBaud);
-  Serial.println("Penis!");
 }
 
 void loop(){
@@ -41,4 +40,5 @@ void loop(){
       Serial.println(gps.speed.kmph()); 
     }
   }
+  Serial.println("Amongus");
 }
