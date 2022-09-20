@@ -8,9 +8,12 @@
  
 #include <TinyGPS++.h>
 #include <SoftwareSerial.h>
+#include <U8glib.h>
 
 static const int RXPin = 3, TXPin = 4;
 static const uint32_t GPSBaud = 9600;
+
+U8GLIB_SH1106_128X64 u8g(13, 11, 10, 9); // SCK = 13, MOSI = 11, CS = 10, A0 = 9
 
 // The TinyGPS++ object
 TinyGPSPlus gps;
@@ -19,6 +22,7 @@ TinyGPSPlus gps;
 SoftwareSerial ss(RXPin, TXPin);
 
 void setup(){
+  u8g.setRot180();
   Serial.begin(9600);
   ss.begin(GPSBaud);
 }
@@ -39,6 +43,13 @@ void loop(){
      
       Serial.print("Speed in km/h = "); 
       Serial.println(gps.speed.kmph()); 
+
+      u8g.firstPage(); do {
+      // picture loop u8g.firstPage(); do {
+      u8g.setFont(u8g_font_unifont);
+      u8g.drawStr( 0, 22, "Hello World!");
+      } while( u8g.nextPage() );
+      // rebuild the picture after some delay delay(50);
     }
   }
 }
