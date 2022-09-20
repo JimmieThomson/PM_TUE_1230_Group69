@@ -1,6 +1,0 @@
-module Pods_gogo_gadget_gogo_gadgetTests {
-  umbrella header "Pods-gogo_gadget-gogo_gadgetTests-umbrella.h"
-
-  export *
-  module * { export * }
-}

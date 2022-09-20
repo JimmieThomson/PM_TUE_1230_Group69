@@ -1,6 +1,0 @@
-module Pods_gogo_gadget {
-  umbrella header "Pods-gogo_gadget-umbrella.h"
-
-  export *
-  module * { export * }
-}
