@@ -23,7 +23,12 @@ void loop(void) {
   while (ss.available() > 0){
     gps.encode(ss.read());
     if (gps.location.isUpdated()){
-      Serial.println(gps.location.lat(),12);
+      Serial.print(gps.speed.kmph(),9);
+      Serial.print(",");
+      Serial.print(gps.location.lng(),9);
+      Serial.print(",");
+      Serial.print(gps.location.lat(),9);
+      Serial.print(",\n");
       // picture loop
       u8g.firstPage();
       do {
