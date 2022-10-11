@@ -10,10 +10,13 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@react-native-community/blur": "^4.2.0",
     "@react-native-community/geolocation": "^3.0.1",
     "@shopify/react-native-skia": "^0.1.153",
+    "expo": "^46.0.0",
+    "expo-blur": "~11.2.0",
     "react": "18.1.0",
-    "react-native": "0.70.1",
+    "react-native": "0.70.2",
     "react-native-geocoding": "^0.5.0",
     "react-native-maps": "^1.3.2"
   },

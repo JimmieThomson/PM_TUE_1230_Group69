@@ -2,26 +2,53 @@ import * as React from 'react';
 import {useState, useEffect} from 'react'
 import MapView from 'react-native-maps';
 import { StyleSheet, Text, View, Dimensions } from 'react-native';
-import { Marker } from 'react-native-maps';
+import { Marker, Polyline } from 'react-native-maps';
 import { Canvas, BackdropFilter, Fill, Image, ColorMatrix, useImage } from "@shopify/react-native-skia";
 import Geolocation from '@react-native-community/geolocation';
+import CustomMarker from './components/CustomMarkerComponent'
+const movieURL = "https://gogo-gadget-api.herokuapp.com/gpsinfo";
 export default function App() {
-  const [
-    currentLongitude,
-    setCurrentLongitude
-  ] = useState('...');
-  const [
-    currentLatitude,
-    setCurrentLatitude
-  ] = useState('...');
-  const [
-    currentSpeed,
-    setCurrentSpeed
-  ] = useState('...');
-  const [
-    locationStatus,
-    setLocationStatus
-  ] = useState('');
+
+  // managing state with 'useState'
+  const [isLoading, setLoading] = useState(true);
+  const [speed,setSpeed] = useState([]);
+  const [longtitude, setLongtitude] = useState([]);
+  const [latitude, Setlatitude] = useState([]);
+  const [array,setArray] = useState([]);
+  // similar to 'componentDidMount', gets called once
+  useEffect(() => {
+    setInterval(() => {
+    fetch(movieURL)
+      .then((response) => response.json()) // get response, convert to json
+      .then((json) => {
+        
+        var locationlength = json.length;
+        // var location = [
+        //   {latitude: json[locationlength-1].latitude,longtitude: json[locationlength-1].longtitude},
+        //   {latitude: json[locationlength-2].latitude,longtitude: json[locationlength-2].longtitude},
+        //   {latitude: json[locationlength-3].latitude,longtitude: json[locationlength-3].longtitude},
+        //   {latitude: json[locationlength-4].latitude,longtitude: json[locationlength-4].longtitude},
+        //   {latitude: json[locationlength-5].latitude,longtitude: json[locationlength-5].longtitude},
+        //   {latitude: json[locationlength-6].latitude,longtitude: json[locationlength-6].longtitude},
+        //   {latitude: json[locationlength-7].latitude,longtitude: json[locationlength-7].longtitude},
+        //   {latitude: json[locationlength-8].latitude,longtitude: json[locationlength-8].longtitude},
+        //   {latitude: json[locationlength-9].latitude,longtitude: json[locationlength-9].longtitude},
+        //   {latitude: json[locationlength-10].latitude,longtitude: json[locationlength-10].longtitude},
+        // ];
+        // setArray(location);
+        setSpeed(json[locationlength-1].speed);
+        setLongtitude(json[locationlength-1].longtitude);
+        Setlatitude(json[locationlength-1].latitude);
+      })
+      .catch((error) => alert(error)) // display errors
+      .finally(() => setLoading(false)); // change loading state
+    }, 1000);
+  }, []);
+
+  const [currentSpeed,setCurrentSpeed] = useState('...');
+  const [currentLatitude, setCurrentLatitude] = useState('...');
+  const [currentLongitude, setCurrentLongitude] = useState('...');
+  const [locationStatus,setLocationStatus] = useState('');
   useEffect(() => {
     const requestLocationPermission = async () => {
       if (Platform.OS === 'ios') {
@@ -53,7 +80,7 @@ export default function App() {
       Geolocation.clearWatch(watchID);
     };
   }, []);
- 
+  
   const getOneTimeLocation = () => {
     setLocationStatus('Getting Location ...');
     Geolocation.getCurrentPosition(
@@ -91,7 +118,8 @@ export default function App() {
       },
     );
   };
- 
+
+  var coordinatesarray = [];
   const subscribeLocationLocation = () => {
     watchID = Geolocation.watchPosition(
       (position) => {
@@ -110,13 +138,20 @@ export default function App() {
 
         const currentSpeed = 
           JSON.stringify(position.coords.speed);
-        //Setting Longitude state
+        if(currentSpeed == -1){
+          setCurrentSpeed("0")
+        }
+        else{
+          setCurrentSpeed(Math.round(currentSpeed * 1.60934));
+        }
         setCurrentLongitude(currentLongitude);
  
         //Setting Latitude state
         setCurrentLatitude(currentLatitude);
-
-        setCurrentSpeed(currentSpeed);
+        var coordinatesarray = [];
+      var obj = {latitude: currentLatitude, longtitude: currentLongitude}
+    coordinatesarray.push(obj);
+        
       },
       (error) => {
         setLocationStatus(error.message);
@@ -126,35 +161,53 @@ export default function App() {
         maximumAge: 1000
       },
     );
+    
+
   };
-  console.log(currentLatitude);
-  console.log(currentLongitude)
   return (
     <View style={styles.container}>
       <MapView style={styles.map}
-      // region={{
-      //   latitude: currentLatitude,
-      //   longitude: currentLongitude,
-      //   latitudeDelta: 0.015,
-      //   longitudeDelta: 0.0121
-      // }}
+      region={{
+        latitude: currentLatitude,
+        longitude: currentLongitude,
+        latitudeDelta: 0.015,
+        longitudeDelta: 0.0121
+      }}
       
       >
         <Marker coordinate={{
         latitude: currentLatitude,
         longitude: currentLongitude
       }}
-      pinColor = "black"
+  
       >
-        <Text style={fonts.header}> Hello</Text>
+        <View style={styles.usermarker}>
+        <Text style={fonts.markerTitle}>You</Text>
+        </View>
       </Marker>
-      <Marker coordinate={{
-        latitude: -37.6291324,
-        longitude: 145.070799
+      <Marker 
+      coordinate={{
+        latitude: latitude,
+        longitude: longtitude
       }}
-      pinColor = "blue"
         >
+        <View style={styles.usermarker}>
+        <Text style={fonts.markerTitle}>Your mom </Text>
+        </View>
       </Marker>
+      {/* <Polyline
+		coordinates={{array}}
+		strokeColor="#000" // fallback for when `strokeColors` is not supported by the map-provider
+		strokeColors={[
+			'#7F0000',
+			'#00000000', // no color, creates a "long" gradient between the previous and next coordinate
+			'#B24112',
+			'#E5845C',
+			'#238C23',
+			'#7F0000'
+		]}
+		strokeWidth={6}
+	/> */}
         </MapView>
       
       <View style={styles.topbarwrapper}>
@@ -165,21 +218,18 @@ export default function App() {
           </View>
           <View style={styles.time}></View>
         </View>
-      </View>
+      </View> 
       <View style={styles.navbar} blurRadius={1}>
         <View style={styles.icons}>
           <View style={styles.images} ></View>
           <Text style={fonts.deviceTitle}>You</Text>
+          <Text style={fonts.speedfont}>{currentSpeed} Km/H</Text>
         </View>
         <View style={styles.icons}>
           <View style={styles.images} ></View>
           <Text style={fonts.deviceTitle}>Device 1</Text>
         </View>
-        <View style={styles.icons}>
-          <View style={styles.images} ></View>
-          <Text style={fonts.deviceTitle}>You</Text>
-        </View>
-        
+        {/* </BlurView> */}
       </View>
     </View>
   );
@@ -196,6 +246,14 @@ const fonts = StyleSheet.create({
     fontSize: 20,
     color: 'white',
   },
+  markerTitle: {
+    fontSize: 10,
+    color: 'white'
+  },
+  speedfont: {
+    fontSize: 13,
+    color: 'rgb(45,45,45)',
+  }
 })
 const styles = StyleSheet.create({
   container: {
@@ -250,5 +308,13 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 50,
     backgroundColor: 'white',
+  },
+  usermarker: {
+    width: 50,
+    height: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 50,
+    backgroundColor: '#586AE2'
   }
 });
